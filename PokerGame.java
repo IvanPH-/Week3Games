@@ -59,25 +59,26 @@ public class PokerGame {
 		playerSetter(z2, players);
 		//Iterate through list size. Set each objects wallet to wallet = inputnextInt();
 		//There is no betting. Just folding or playing.
-		startGame(players, z);
+		startGame(players, z, y);
 		
 	}
 	
-	private static void startGame(List<Player> x, double z) {
+	private static void startGame(List<Player> x, double z, String y) {
 		while(x.size() > 1) {
 			double pot = z * 4;
 			anteDeductor(x, z);
+			List<Player> placeHold = new ArrayList<>(x);
 			deal(x);
-			List<Player> placeHold = x;
 			System.out.println("Player " + x.get(0).name + " current hand is: " + printPlayerHand(x));
 			findValues(x);
 			System.out.println("Would you like to play or fold?");
-			String answer = input.nextLine();
+			String answer = input.next();
 			answer = answer.toLowerCase();
 			//If fold just continue to check the bots. Otherwise include the player in the checks
 			if (answer.equals("fold")) {
-				//compareHands(x, flag);
-				//run logic without player
+				System.out.println("You folded");
+				x.remove(0);
+				compareHands(x);
 			}
 			else if (answer.equals("play")) {
 				//run logic with player
@@ -85,18 +86,30 @@ public class PokerGame {
 			}
 			else {
 				//errors
+				//Run the if statement again. Make this a method
 			}
 			double giveWinnings = x.get(0).getWallet() + pot;
 			x.get(0).setWallet(giveWinnings);
 			//Reflect that change to the player list;
-			resetList(placeHold, x);
+			x = resetList(placeHold, x, y);
 			//Run a check for all players to eliminate those who don't have enough to pay the ante for next round
+			x = eliminateCheck(x, z);
 		}
 		//Print the the players name and that they won
 		System.out.println("Player " + x.get(0).name + " has won the game");
 	}
 
-	private static void resetList(List<Player> placeHold, List<Player> x) {
+	private static List<Player> eliminateCheck(List<Player> x, double z) {
+		for(int i = 0; i < x.size(); i++) {
+			if(z > x.get(i).getWallet()) {
+				System.out.println(x.get(i).name + " was eliminated");
+				x.remove(i);
+			}
+		}
+		return x;
+	}
+
+	private static List<Player> resetList(List<Player> placeHold, List<Player> x, String y) {
 		for (int i = 0; i < placeHold.size(); i++) {
 			if (x.get(0).name.equals(placeHold.get(i).name)) {
 				placeHold.remove(i);
@@ -106,11 +119,12 @@ public class PokerGame {
 		}
 		x = placeHold;
 		for (int j = 0; j < x.size(); j++) {
-			System.out.println(x.get(j).name);
-			if (x.get(j).name.equals("ivan")) {
+			if (x.get(j).name.equals(y)) {
 				x.set(0, x.get(j));
+				break;
 			}
 		}
+		return x;
 		//Return the player to the beginning of the list by having a variable which stores their name check the names and then move matching name to the first index
 	}
 
@@ -132,7 +146,7 @@ public class PokerGame {
 		}
 		cleanHands(handFinder, x);
 		findValue(x.tieBreaker, x.value);
-		findHandValue(x.handValue, x.value);
+		x.handValue = findHandValue(x.value);
 	}
 
 	private static String printPlayerHand(List<Player> x) {
@@ -460,8 +474,7 @@ public class PokerGame {
 
 	protected static void compareHands(List<Player> x) {
 		List<Player> checker = x;
-		System.out.println(checker.get(0).name);
-		for(int i = 0; x.size() == 1;) {
+		for(int i = 0; i + 1 < checker.size();) {
 			if(checker.get(i).handValue > checker.get(i + 1).handValue) {
 				checker.remove(i + 1);
 			}
@@ -471,19 +484,20 @@ public class PokerGame {
 			else {
 				checker.remove(i);
 			}
-			System.out.println(checker.get(0).name + " wins");
-			//Give that ante to that player in a permanent way
-			x = checker;
 		}
-		
+		System.out.println(checker.get(0).name + " wins");
+		x = checker;
 	}
 	
-	protected static void findHandValue(int x, boolean[] y) {
+	protected static int findHandValue(boolean[] y) {
+		int x = 0;
 		for(int i = 0; i <= y.length - 1; i++) {
 			if (y[i] == true) {
 				x = i + 1;
+				y[i] = false;
 				break;
 			}
 		}
+		return x;
 	}
 }
