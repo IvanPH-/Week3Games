@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
-
+//To Do: Add AI to the bots; Give each bot a different name
 public class PokerGame {
 	static Scanner input = new Scanner(System.in);
 	
@@ -72,7 +72,7 @@ public class PokerGame {
 			System.out.println("Player " + x.get(0).name + " current hand is: " + printPlayerHand(x));
 			findValues(x);
 			System.out.println("Would you like to play or fold?");
-			String answer = input.next();
+			String answer = input.nextLine();
 			answer = answer.toLowerCase();
 			//If fold just continue to check the bots. Otherwise include the player in the checks
 			if (answer.equals("fold")) {
@@ -94,6 +94,7 @@ public class PokerGame {
 			x = resetList(placeHold, x, y);
 			//Run a check for all players to eliminate those who don't have enough to pay the ante for next round
 			x = eliminateCheck(x, z);
+			//If player was eliminated exit the program and say a computer won. Add a method here.
 		}
 		//Print the the players name and that they won
 		System.out.println("Player " + x.get(0).name + " has won the game");
@@ -136,8 +137,8 @@ public class PokerGame {
 	
 	private static void findValue(Player x) {
 		String charArrayPrep = "";
-		for (int i = 0; i < x.hand.length; i++) {
-			charArrayPrep += x.hand[i];
+		for (int i = 0; i < x.getHand().length; i++) {
+			charArrayPrep += x.getHand()[i];
 		}
 		char[] handArray = charArrayPrep.toCharArray();
 		List<Character> handFinder = new ArrayList<>();
@@ -151,7 +152,7 @@ public class PokerGame {
 
 	private static String printPlayerHand(List<Player> x) {
 		String toReturn = "";
-		for(String i : x.get(0).hand) {
+		for(String i : x.get(0).getHand()) {
 			toReturn += i;
 			toReturn += " ";
 		}

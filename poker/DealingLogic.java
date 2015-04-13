@@ -65,7 +65,7 @@ public class DealingLogic extends PokerGame {
 	
 		for(int i = 0; i < x.size(); i++) {
 			for(int j = 0; j <= 4; j++) {
-				x.get(i).hand[j] = z.get(0);
+				x.get(i).getHand()[j] = z.get(0);
 				z.remove(0);
 			}
 		}
