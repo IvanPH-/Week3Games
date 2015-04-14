@@ -24,8 +24,8 @@ public class BlackJackMain {
 		System.out.println("Your hand is: " + hand(player));
 		findValues(player);
 		findValues(dealer);
-		checkToEnd(player, dealer);
 		highOrLowCheck(player, player.handValues);
+		checkToEnd(player, dealer, deck);
 		System.out.println("Would you like to get another card (hit) or stay?");
 		String x = input.nextLine();
 		x.toLowerCase();
@@ -35,7 +35,7 @@ public class BlackJackMain {
 			hitOrMiss(player, dealer, deck);
 			break;
 		case "stay":
-			compareHands(player, dealer);
+			compareHands(player, dealer, deck);
 			break;
 		default:
 			System.out.println("Please enter a valid command (hit) (stay)");
@@ -43,7 +43,7 @@ public class BlackJackMain {
 		}
 	}
 
-	private static void checkToEnd(Player player, Player dealer) {
+	private static void checkToEnd(Player player, Player dealer, List<String> deck) {
 		// TODO Auto-generated method stub
 		if(player.handValue > 21) {
 			System.out.println("You busted out. The dealer wins");
@@ -51,11 +51,12 @@ public class BlackJackMain {
 		}
 		else if (player.handValue == 21) {
 			System.out.println("You've got blackJack!");
-			compareHands(player, dealer);
+			compareHands(player, dealer, deck);
 		}
 	}
 
-	private static void compareHands(Player player, Player dealer) {
+	private static void compareHands(Player player, Player dealer, List<String> deck) {
+		dealerDraw(dealer, deck);
 		System.out.println("Your hand is: " + hand(player));
 		System.out.println("The dealer has: " + hand(dealer));
 		if(player.handValue > dealer.handValue) {
@@ -70,6 +71,19 @@ public class BlackJackMain {
 			System.out.println("The dealer won");
 			startBlackJack();
 		}
+	}
+
+	private static void dealerDraw(Player dealer, List<String> deck) {
+		while (dealer.handValue < 17) {
+			BlackJackDeal.addCard(dealer, deck);
+			findValues(dealer);
+			if(dealer.handValue > 21) {
+				System.out.println("The dealer busted out. You win!");
+				startBlackJack();
+				break;
+			}
+		}
+		
 	}
 
 	private static String hand(Player x) {
@@ -150,7 +164,7 @@ public class BlackJackMain {
 	
 	private static void highOrLowCheck(Player player, List<Integer> handValues) {
 		if (player.handValue > 21) {
-			for(int i : handValues) {
+			for(int i = 0; i < handValues.size(); i++) {
 				if(handValues.get(i) == 11) {
 					handValues.remove(i);
 					handValues.add(1);
