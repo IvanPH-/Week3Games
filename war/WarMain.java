@@ -17,8 +17,6 @@ public class WarMain {
 		String x = input.nextLine();
 		player.name = x;
 		WarDeal.handConstructor(player, computer);
-		findValues(player);
-		findValues(computer);
 		startGame(player, computer);
 	}
 	
@@ -42,18 +40,18 @@ public class WarMain {
 	}
 
 	private static void playWar(WarPlayer player, WarPlayer computer) {
-		System.out.println(player.name + " has " + player.deck.get(0));
-		System.out.println(computer.name + " has " + computer.deck.get(0));
+		System.out.println(player.name + " has " + player.deck.get(0).cardName);
+		System.out.println(computer.name + " has " + computer.deck.get(0).cardName);
 		compareHands(player, computer);
 	}
 
 	private static void compareHands(WarPlayer player, WarPlayer computer) {
-		if(player.deckValues.get(0) > computer.deckValues.get(0)) {
+		if(player.deck.get(0).cardValue > computer.deck.get(0).cardValue) {
 			giveCards(player, computer);
 			System.out.println("You won the round!");
 			startGame(player, computer);
 		}
-		else if(player.deckValues.get(0) == computer.deckValues.get(0)) {
+		else if(player.deck.get(0).cardValue == computer.deck.get(0).cardValue) {
 			System.out.println("You both tied. Preparing for war..");
 			war(player, computer);
 		}
@@ -65,142 +63,73 @@ public class WarMain {
 	}
 	
 	private static void giveCards(WarPlayer x, WarPlayer y) {
-		x.deckValues.add(y.deckValues.get(0));
 		x.deck.add(y.deck.get(0));
-		x.deckValues.add(x.deckValues.get(0));
 		x.deck.add(x.deck.get(0));
-		y.deckValues.remove(0);
-		x.deckValues.remove(0);
 		x.deck.remove(0);
 		y.deck.remove(0);
 	}
 	
 	private static void war(WarPlayer player, WarPlayer computer) {
-		List<String> stringHold = new ArrayList<>();
-		List<Integer> intHold = new ArrayList<>();
+		List<WarCards> placeHold = new ArrayList<>();
 		int i = 0;
 		while(i <= 3) {
 			winCheck(player, computer);
-			stringHold.add(player.deck.get(0));
-			intHold.add(player.deckValues.remove(0));
+			placeHold.add(player.deck.get(0));
+			placeHold.add(computer.deck.get(0));
 			player.deck.remove(0);
 			computer.deck.remove(0);
 			i++;
 		}
-		compareHands(player, computer, stringHold, intHold);
+		compareHands(player, computer, placeHold);
 	}
 
-	private static void compareHands(WarPlayer player, WarPlayer computer, List<String> stringHold, List<Integer> intHold) {
-		System.out.println(player.name + " has " + player.deck.get(0));
-		System.out.println(computer.name + " has " + computer.deck.get(0));
+	private static void compareHands(WarPlayer player, WarPlayer computer, List<WarCards> placeHold) {
+		System.out.println(player.name + " has " + player.deck.get(0).cardName);
+		System.out.println(computer.name + " has " + computer.deck.get(0).cardName);
 		
-		if(player.deckValues.get(0) > computer.deckValues.get(0)) {
-			giveCards(player, computer, stringHold, intHold);
+		if(player.deck.get(0).cardValue > computer.deck.get(0).cardValue) {
+			giveCards(player, computer, placeHold);
 			System.out.println("You won the round!");
 			startGame(player, computer);
 		}
-		else if(player.deckValues.get(0) == computer.deckValues.get(0)) {
+		else if(player.deck.get(0).cardValue == computer.deck.get(0).cardValue) {
 			System.out.println("You both tied. Preparing for war..");
-			war(player, computer, stringHold, intHold);
+			war(player, computer, placeHold);
 		}
 		else {
-			giveCards(computer, player, stringHold, intHold);
+			giveCards(computer, player, placeHold);
 			System.out.println("The computer won the round!");
 			startGame(player, computer);
 		}
 		
 	}
 
-	private static void war(WarPlayer player, WarPlayer computer, List<String> stringHold, List<Integer> intHold) {
+	private static void war(WarPlayer player, WarPlayer computer, List<WarCards> placeHold) {
 		int i = 0;
 		while(i <= 3) {
 			winCheck(player, computer);
-			stringHold.add(player.deck.get(0));
-			intHold.add(player.deckValues.remove(0));
-			stringHold.add(computer.deck.get(0));
-			intHold.add(computer.deckValues.get(0));
+			placeHold.add(player.deck.get(0));
+			placeHold.add(computer.deck.get(0));
 			player.deck.remove(0);
-			player.deckValues.remove(0);
 			computer.deck.remove(0);
-			computer.deckValues.remove(0);
 			i++;
 		}
-		compareHands(player, computer, stringHold, intHold);
+		compareHands(player, computer, placeHold);
 		
 	}
 
-	private static void giveCards(WarPlayer x, WarPlayer y, List<String> stringHold, List<Integer> intHold) {
+	private static void giveCards(WarPlayer x, WarPlayer y, List<WarCards> placeHold) {
 		giveCards(x, y);
-		giveHolds(x, stringHold, intHold);
+		giveHolds(x, placeHold);
 	}
 
-	private static void giveHolds(WarPlayer x, List<String> stringHold, List<Integer> intHold) {
-		List<String> placeHold1 = new ArrayList<>(x.deck);
-		List<Integer> placeHold2 = new ArrayList<>(x.deckValues);
-		while (stringHold.size() > 0) {
-			placeHold1.add(stringHold.get(0));
-			placeHold2.add(intHold.get(0));
-			stringHold.remove(0);
-			intHold.remove(0);
+	private static void giveHolds(WarPlayer x, List<WarCards> placeHold) {
+		List<WarCards> newPlaceHold = new ArrayList<>(x.deck);
+		while (placeHold.size() > 0) {
+			newPlaceHold.add(placeHold.get(0));
+			placeHold.remove(0);
 		}
-		x.deck = placeHold1;
-		x.deckValues = placeHold2;
-	}
-
-	private static void findValues(WarPlayer x) {
-		String charArrayPrep = "";
-		for (int i = 0; i < x.deck.size(); i++) {
-			charArrayPrep += x.deck.get(i);
-		}
-		char[] handArray = charArrayPrep.toCharArray();
-		List<Character> handFinder = new ArrayList<>();
-		for (int j = 0; j < handArray.length; j++) {
-			handFinder.add(handArray[j]);
-		}
-		cleanHands(handFinder, x);
-	}
-	
-	protected static void cleanHands(List<Character> x, WarPlayer y) {
-		for(int i = 0; i <= x.size() - 1; i++) {
-			if(x.get(i) == 'C' || x.get(i) == 'H' || x.get(i) == 'D' || x.get(i) == 'S') {
-				x.remove(i);
-				i = 0;
-			}
-		}
-		y.deckValues = remainingCharsToInt(x, y);
-	}
-	
-	protected static List<Integer> remainingCharsToInt(List<Character> x, WarPlayer y) {
-		List<Integer> toReturn = new ArrayList<>();
-		List<String> newList = new ArrayList<>();
-		
-		for(int i = 0; i <= x.size() - 1; i++){
-			newList.add(String.valueOf(x.get(i)));
-			switch(newList.get(i)) {
-				case "T":
-						newList.remove(i);
-						newList.add("10");
-						break;
-					case "J":
-						newList.remove(i);
-						newList.add("11");
-						break;
-					case "Q":
-						newList.remove(i);
-						newList.add("12");
-						break;
-					case "K":
-						newList.remove(i);
-						newList.add("13");
-						break;
-					case "A":
-						newList.remove(i);
-						newList.add("14");
-						break;
-				}
-			toReturn.add(Integer.parseInt(newList.get(i)));
-		}
-		return toReturn;
+		x.deck = newPlaceHold;
 	}
 
 	private static void winCheck(WarPlayer player, WarPlayer computer) {
