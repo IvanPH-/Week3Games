@@ -15,16 +15,16 @@ public class BlackJackMain {
 		System.out.println("The dealer deals out the hands...");
 		Player player = new Player();
 		Player dealer = new Player();
-		List<String> deck = new ArrayList<>();
+		List<BlackJackCards> deck = new ArrayList<>();
 		deck = BlackJackDeal.handConstructor(player, dealer, deck);
 		hitOrMiss(player, dealer, deck);
 	}
-	
-	private static void hitOrMiss(Player player, Player dealer, List<String> deck) {
-		System.out.println("Your hand is: " + hand(player));
-		findValues(player);
-		findValues(dealer);
-		highOrLowCheck(player, player.handValues);
+
+	private static void hitOrMiss(Player player, Player dealer, List<BlackJackCards> deck) {
+		System.out.println("Your hand is: " + printHand(player));
+		player.handValue = findValues(player);
+		dealer.handValue = findValues(dealer);
+		highOrLowCheck(player);
 		checkToEnd(player, dealer, deck);
 		System.out.println("Would you like to get another card (hit) or stay?");
 		String x = input.nextLine();
@@ -43,7 +43,15 @@ public class BlackJackMain {
 		}
 	}
 
-	private static void checkToEnd(Player player, Player dealer, List<String> deck) {
+	private static int findValues(Player player) {
+		int toReturn = 0;
+		for(int i = 0; i < player.hand.size(); i++) {
+			toReturn += player.hand.get(i).cardValue;
+		}
+		return toReturn;
+	}
+
+	private static void checkToEnd(Player player, Player dealer, List<BlackJackCards> deck) {
 		// TODO Auto-generated method stub
 		if(player.handValue > 21) {
 			System.out.println("You busted out. The dealer wins");
@@ -55,10 +63,12 @@ public class BlackJackMain {
 		}
 	}
 
-	private static void compareHands(Player player, Player dealer, List<String> deck) {
+	private static void compareHands(Player player, Player dealer, List<BlackJackCards> deck) {
 		dealerDraw(dealer, deck);
-		System.out.println("Your hand is: " + hand(player));
-		System.out.println("The dealer has: " + hand(dealer));
+		System.out.println("Your hand is: " + printHand(player));
+		System.out.println(player.handValue);
+		System.out.println("The dealer has: " + printHand(dealer));
+		System.out.println(dealer.handValue);
 		if(player.handValue > dealer.handValue) {
 			System.out.println("You've won");
 			startBlackJack();
@@ -73,10 +83,20 @@ public class BlackJackMain {
 		}
 	}
 
-	private static void dealerDraw(Player dealer, List<String> deck) {
+	private static String printHand(Player player) {
+		String toReturn = "";
+		for(int i = 0; i < player.hand.size(); i++) {
+			toReturn += player.hand.get(i).cardName;
+			toReturn += " ";
+		}
+		return toReturn;
+	}
+
+	private static void dealerDraw(Player dealer, List<BlackJackCards> deck) {
 		while (dealer.handValue < 17) {
 			BlackJackDeal.addCard(dealer, deck);
-			findValues(dealer);
+			dealer.handValue = findValues(dealer);
+			highOrLowCheck(dealer);
 			if(dealer.handValue > 21) {
 				System.out.println("The dealer busted out. You win!");
 				startBlackJack();
@@ -85,89 +105,14 @@ public class BlackJackMain {
 		}
 		
 	}
-
-	private static String hand(Player x) {
-		String y = "";
-		for(int i = 0; i < x.hand.size(); i++) {
-			y += x.hand.get(i);
-			y += " ";
-		}
-		return y;
-	}
 	
-	private static void findValues(Player x) {
-		String charArrayPrep = "";
-		for (int i = 0; i < x.hand.size(); i++) {
-			charArrayPrep += x.hand.get(i);
-		}
-		char[] handArray = charArrayPrep.toCharArray();
-		List<Character> handFinder = new ArrayList<>();
-		for (int j = 0; j < handArray.length; j++) {
-			handFinder.add(handArray[j]);
-		}
-		cleanHands(handFinder, x);
-	}
-	
-	protected static void cleanHands(List<Character> x, Player y) {
-		for(int i = 0; i <= x.size() - 1; i++) {
-			if(x.get(i) == 'C' || x.get(i) == 'H' || x.get(i) == 'D' || x.get(i) == 'S') {
-				x.remove(i);
-				i = 0;
-			}
-		}
-		y.handValues = remainingCharsToInt(x, y);
-		y.handValue = Player.findValue(y.handValues);
-	}
-
-	protected static List<Integer> remainingCharsToInt(List<Character> x, Player y) {
-		List<Integer> toReturn = new ArrayList<>();
-		List<String> newList = new ArrayList<>();
-		
-		for(int i = 0; i <= x.size() - 1; i++){
-			newList.add(String.valueOf(x.get(i)));
-			switch(newList.get(i)) {
-				case "T":
-						newList.remove(i);
-						newList.add("10");
-						break;
-					case "J":
-						newList.remove(i);
-						newList.add("10");
-						break;
-					case "Q":
-						newList.remove(i);
-						newList.add("10");
-						break;
-					case "K":
-						newList.remove(i);
-						newList.add("10");
-						break;
-					case "A":
-						newList.remove(i);
-						newList.add(highOrLowCheck(newList, y));
-						break;
-				}
-			toReturn.add(Integer.parseInt(newList.get(i)));
-		}
-		return toReturn;
-	}
-
-	private static String highOrLowCheck(List<String> newList, Player y) {
-		if(y.handValue + 11 > 21) {
-			return "1";
-		}
-		else if(y.handValue + 11 <= 21) {
-			return "11";
-		}
-		return null;
-	}
-	
-	private static void highOrLowCheck(Player player, List<Integer> handValues) {
+	private static void highOrLowCheck(Player player) {
 		if (player.handValue > 21) {
-			for(int i = 0; i < handValues.size(); i++) {
-				if(handValues.get(i) == 11) {
-					handValues.remove(i);
-					handValues.add(1);
+			for(int i = 0; i < player.hand.size(); i++) {
+				if(player.hand.get(i).cardValue == 11) {
+					player.hand.get(i).cardValue = 1;
+					player.handValue = findValues(player);
+					break;
 				}
 			}
 		}
