@@ -39,15 +39,16 @@ public class PokerGame {
 	}
 		
 	protected static void execution()  {
-		System.out.println("How many players are Playing? (Minimum 2 || Maximum of 6)");
+		String[] names = {null, "CPU1", "CPU2", "CPU3", "CPU4", "CPU5"};
+		System.out.println("How many other players are Playing? (Minimum 1 || Maximum of 5)");
 		int x = input.nextInt();
 		//Method to construct x amount of players
 		List<Player> players = playerConstructor(x);
 		//Ask for player Name to set. Set it to the first object in the list using player.name = input.nextln();
 		System.out.println("Please input your name to use");
 		input.nextLine();
-		String y = input.nextLine();
-		players.get(0).name = y;
+		names[0] = input.nextLine();
+		setNames(names, players);;
 		//Set the ante size that gets passed into the poker game and keeps it constant. Set int to FINAL so it stays. Deduct this at the start of each round from wallet
 		System.out.println("Input the ante that each player pays before each round");
 		double z = input.nextDouble();
@@ -59,17 +60,23 @@ public class PokerGame {
 		playerSetter(z2, players);
 		//Iterate through list size. Set each objects wallet to wallet = inputnextInt();
 		//There is no betting. Just folding or playing.
-		startGame(players, z, y);
+		startGame(players, z, names);
 		
 	}
 	
-	private static void startGame(List<Player> x, double z, String y) {
+	private static void setNames(String[] names, List<Player> players) {
+		for(int i = 0; i < players.size(); i++) {
+			players.get(i).name = names[i];
+		}
+	}
+
+	private static void startGame(List<Player> x, double z, String[] y) {
 		while(x.size() > 1) {
 			double pot = z * 4;
 			anteDeductor(x, z);
 			List<Player> placeHold = new ArrayList<>(x);
 			deal(x);
-			System.out.println("Player " + x.get(0).name + " current hand is: " + printPlayerHand(x));
+			System.out.println("Player " + x.get(0).name + " hand is: " + printPlayerHand(x.get(0)) + " who has " + x.get(0).wallet + " left in their wallet.");
 			findValues(x);
 			System.out.println("Would you like to play or fold?");
 			String answer = input.nextLine();
@@ -88,8 +95,7 @@ public class PokerGame {
 				//errors
 				//Run the if statement again. Make this a method
 			}
-			double giveWinnings = x.get(0).getWallet() + pot;
-			x.get(0).setWallet(giveWinnings);
+			x.get(0).wallet += pot;
 			//Reflect that change to the player list;
 			x = resetList(placeHold, x, y);
 			//Run a check for all players to eliminate those who don't have enough to pay the ante for next round
@@ -101,16 +107,19 @@ public class PokerGame {
 	}
 
 	private static List<Player> eliminateCheck(List<Player> x, double z) {
-		for(int i = 0; i < x.size(); i++) {
-			if(z > x.get(i).getWallet()) {
+		for(int i = 0; i < x.size();) {
+			if(z > x.get(i).wallet) {
 				System.out.println(x.get(i).name + " was eliminated");
 				x.remove(i);
+				i = 0;
+				continue;
 			}
+			i++;
 		}
 		return x;
 	}
 
-	private static List<Player> resetList(List<Player> placeHold, List<Player> x, String y) {
+	private static List<Player> resetList(List<Player> placeHold, List<Player> x, String[] y) {
 		for (int i = 0; i < placeHold.size(); i++) {
 			if (x.get(0).name.equals(placeHold.get(i).name)) {
 				placeHold.remove(i);
@@ -120,40 +129,55 @@ public class PokerGame {
 		}
 		x = placeHold;
 		for (int j = 0; j < x.size(); j++) {
-			if (x.get(j).name.equals(y)) {
+			if (x.get(j).name.equals(y[0])) {
 				x.set(0, x.get(j));
 				break;
 			}
+		}
+		
+		for (int k = 0; k < x.size(); k++) {
+			x.get(k).tieBreaker.clear();
 		}
 		return x;
 		//Return the player to the beginning of the list by having a variable which stores their name check the names and then move matching name to the first index
 	}
 
 	private static void findValues(List<Player> x) {
+		initTieBreakers(x);
 		for(int i = 0; i < x.size(); i++) {
 			findValue(x.get(i));
 		}
 	}
 	
+	private static void initTieBreakers(List<Player> x) {
+		for(int i = 0; i < x.size(); i++) {
+			for(int j = 0; j < x.get(i).hand.length; j++) {
+				x.get(i).tieBreaker.add(x.get(i).hand[j].cardValue);
+			}
+		}
+		
+	}
+
 	private static void findValue(Player x) {
 		String charArrayPrep = "";
-		for (int i = 0; i < x.getHand().length; i++) {
-			charArrayPrep += x.getHand()[i];
+		for (int i = 0; i < x.hand.length; i++) {
+			charArrayPrep += x.hand[i].cardName;
 		}
 		char[] handArray = charArrayPrep.toCharArray();
 		List<Character> handFinder = new ArrayList<>();
 		for (int j = 0; j < handArray.length; j++) {
 			handFinder.add(handArray[j]);
 		}
+		Collections.sort(x.tieBreaker);
 		cleanHands(handFinder, x);
-		findValue(x.tieBreaker, x.value);
+		findComparisonValue(x);
 		x.handValue = findHandValue(x.value);
 	}
 
-	private static String printPlayerHand(List<Player> x) {
+	private static String printPlayerHand(Player x) {
 		String toReturn = "";
-		for(String i : x.get(0).getHand()) {
-			toReturn += i;
+		for(int i = 0; i < x.hand.length; i++) {
+			toReturn += x.hand[i].cardName;
 			toReturn += " ";
 		}
 		return toReturn;
@@ -165,9 +189,7 @@ public class PokerGame {
 
 	private static void anteDeductor(List<Player> x, double z) {
 		for(int i = 0; i < x.size(); i++) {
-			double wallet = x.get(i).getWallet();
-			wallet -= z;
-			x.get(i).setWallet(wallet);
+			x.get(i).wallet -= z;
 		}
 		
 	}
@@ -180,19 +202,12 @@ public class PokerGame {
 
 	private static List<Player> playerConstructor(int y) {
 		List<Player> toReturn = new ArrayList<>();
-        for(int i = 0; i < y; i++) {
+        for(int i = 0; i <= y; i++) {
         	Player player = new Player();
             toReturn.add(player);
         }
         return toReturn;
     }
-
-	protected static void constructPlayerList(List<Character> x, char[] y) {
-		for(int i = 0; i <= y.length - 1; i++) {
-			x.add(y[i]);
-		}
-		
-	}
 
 	protected static String charArrayPrep(List<String> x) {
 		String toReturn = "";
@@ -212,41 +227,6 @@ public class PokerGame {
 			}
 		}
 		findFlush(flushFinder, y.value);
-		remainingCharsToInt(x, y);
-	}
-
-	protected static void remainingCharsToInt(List<Character> x, Player y) {
-		List<Integer> toReturn = new ArrayList<>();
-		List<String> newList = new ArrayList<>();
-		
-		for(int i = 0; i <= x.size() - 1; i++){
-			newList.add(String.valueOf(x.get(i)));
-			switch(newList.get(i)) {
-				case "T":
-						newList.remove(i);
-						newList.add("10");
-						break;
-					case "J":
-						newList.remove(i);
-						newList.add("11");
-						break;
-					case "Q":
-						newList.remove(i);
-						newList.add("12");
-						break;
-					case "K":
-						newList.remove(i);
-						newList.add("13");
-						break;
-					case "A":
-						newList.remove(i);
-						newList.add("14");
-						break;
-				}
-			toReturn.add(Integer.parseInt(newList.get(i)));
-		}
-		Collections.sort(toReturn);
-		y.tieBreaker = toReturn;
 	}
 
 	protected static void findFlush(List<Character> x, boolean[] y) {
@@ -262,12 +242,12 @@ public class PokerGame {
 		
 	}
 
-	public static void findValue(List<Integer> x, boolean[] y) {
-		checkOfAKindSeries(x, y);
+	public static void findComparisonValue(Player x) {
+		checkOfAKindSeries(x.tieBreaker, x.value);
 		//If statment in a method to pass both a, b to make sure fullhouse(which we checked for), and four of a kind aren't possibilities. If they aren't we run to check for pairs
-		checkToCheckPair(x, y);
+		checkToCheckPair(x.tieBreaker, x.value);
 		//If statement to check for straights if NONE of the values aside from flush which is an exception is false. If false checks for straight
-		checkToCheckStraight(x, y);
+		checkToCheckStraight(x.tieBreaker, x.value);
 	}
 	
 	protected static void checkToCheckStraight(List<Integer> x, boolean[] y) {
@@ -330,9 +310,11 @@ public class PokerGame {
 	}
 	
 	protected static void checkOfAKindSeries(List<Integer> x, boolean[] y) {
+		int startingPoint = 0;
+		boolean startSet = false;
 		List<Integer> placeHold = new ArrayList<>(x);
 		List<Integer> holdRemove = new ArrayList<>();
-		Collections.sort(x); //Return it to how it was originally before being sorted if none are true. Otherwise maintain the three or four at the end if true - Done
+		//Return it to how it was originally before being sorted if none are true. Otherwise maintain the three or four at the end if true - Done
 		//Check for pairs in here if three of a kind passes
 		boolean threeFlag = false;
 		boolean fourFlag = false;
@@ -354,6 +336,13 @@ public class PokerGame {
 					break;
 				}
 				threeFlag = true;
+				if(startSet == false) {
+					startingPoint = i;
+					startSet = true;
+				}
+				else if (startSet == true) {
+					continue;
+				}
 			}
 			else if(x.get(i) != x.get(i + 1)) {
 				threeFlag = false;
@@ -364,9 +353,11 @@ public class PokerGame {
 		
 		//Remove three pair if true in y. check two for pair by calling pair check.
 		if(y[2] == true) {
-			removeForPairCheck(x, holdRemove);
+			x.remove(startingPoint);
+			x.remove(startingPoint);
+			x.remove(startingPoint);
 			checkPairSeries(x, y);
-			repairComparison(x, holdRemove);
+			x.addAll(holdRemove);
 		}
 		else if(y[6] == true) {
 			y[0] = false;
@@ -380,32 +371,13 @@ public class PokerGame {
 		}
 		else if(fourFlag == true) {
 			//run code to remove the matches from x, and place them at the end
-			repairComparison(x, holdRemove);
+			x.remove(startingPoint);
+			x.remove(startingPoint);
+			x.remove(startingPoint);
+			x.remove(startingPoint);
+			x.addAll(holdRemove);
 		}
 		
-	}
-	
-	protected static void removeForPairCheck(List<Integer> x, List<Integer> y) {
-		for(int i = 0; i <= x.size() - 1; i++) {
-			for(int j = 0; j <= x.size() - 1; j++) {
-				if(y.get(i) == x.get(j)) {
-					x.remove(j);
-					j = 0;
-				}
-			}
-		}
-	}
-	
-	protected static void repairComparison(List<Integer> x, List<Integer> y) {
-		for(int i = 0; i <= x.size() - 1; i++) {
-			for(int j = 0; j <= x.size() - 1; j++) {
-				if(y.get(i) == x.get(j)) {
-					x.remove(j);
-					j = 0;
-				}
-			}
-		}
-		x.addAll(y);
 	}
 	
 	protected static void checkPairSeries(List<Integer> x, boolean[] y) {
@@ -474,6 +446,9 @@ public class PokerGame {
 	}
 
 	protected static void compareHands(List<Player> x) {
+		for(int j = 0; j < x.size(); j++) {
+			System.out.println("Player " + x.get(j).name + " hand is: " + printPlayerHand(x.get(j)));
+		}
 		List<Player> checker = x;
 		for(int i = 0; i + 1 < checker.size();) {
 			if(checker.get(i).handValue > checker.get(i + 1).handValue) {
